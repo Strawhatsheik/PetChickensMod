@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configs>
+    <set xpath="/entity_classes">
+        <entity_class name="entityPetChicken" extends="entityAnimalChicken">
+            <property name="AiTaskList">
+                <task name="StayNearNest" />
+                <task name="ReturnToNestAtNight" />
+            </property>
+            <property name="Faction" value="player" />
+            <property name="CanBeTamed" value="true" />
+        </entity_class>
+    </set>
+</configs>
+
