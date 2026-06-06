@@ -1,10 +1,15 @@
 using HarmonyLib;
+using System.Reflection;
 
-public class ChickenMod
+namespace PetChickensMod
 {
-    public static void Init()
+    public class ChickenMod : IModApi
     {
-        var harmony = new Harmony("com.yourmod.chickenmod");
-        harmony.PatchAll();
+        public void InitMod(Mod _modInstance)
+        {
+            var harmony = new Harmony("com.yourname.7dtd.chickenmod");
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            UnityEngine.Debug.Log("[ChickenMod] Harmony patches applied successfully!");
+        }
     }
 }

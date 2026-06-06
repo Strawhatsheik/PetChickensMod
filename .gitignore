@@ -1,0 +1,9 @@
+# Visual Studio local state
+.vs/
+
+# Build output
+bin/
+obj/
+
+# Third-party binaries (reference the game install directly instead)
+Libs/

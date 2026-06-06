@@ -16,13 +16,13 @@ class Patch_ChickenAI
 
         Vector3 homePosition;
 
-        // Assign nest if not assigned yet
+        // Assign nest if not already set
         if (!__instance.HasCustomVar("NestX"))
         {
             EntityPlayer owner = GameManager.Instance.World.GetClosestPlayer(__instance.position, 15);
             if (owner != null)
             {
-                homePosition = owner.position; // fallback if no block method
+                homePosition = owner.position;
                 __instance.SetCustomVar("NestX", homePosition.x);
                 __instance.SetCustomVar("NestY", homePosition.y);
                 __instance.SetCustomVar("NestZ", homePosition.z);
@@ -37,7 +37,7 @@ class Patch_ChickenAI
             );
         }
 
-        // Move back if too far
+        // Move back if too far from nest
         if (Vector3.Distance(__instance.position, homePosition) > MaxRadius)
         {
             __instance.PathTo(homePosition, true);
