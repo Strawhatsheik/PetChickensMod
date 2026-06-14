@@ -9,7 +9,14 @@ namespace PetChickensMod
         {
             var harmony = new Harmony("com.yourname.7dtd.chickenmod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            UnityEngine.Debug.Log("[ChickenMod] Harmony patches applied successfully!");
+
+            ModEvents.GameStartDone.RegisterHandler(OnGameStartDone);
+            ModEvents.GameShutdown.RegisterHandler(OnGameShutdown);
+
+            UnityEngine.Debug.Log("[ChickenMod] Loaded.");
         }
+
+        static void OnGameStartDone() => ChickenNestManager.LoadNames();
+        static void OnGameShutdown()  => ChickenNestManager.SaveNames();
     }
 }

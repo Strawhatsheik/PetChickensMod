@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace PetChickensMod
 {
@@ -41,8 +42,11 @@ namespace PetChickensMod
 
         public static int NextChickenNumber() => ++nextChickenNumber;
 
-        public static void SetName(int entityId, string name) =>
+        public static void SetName(int entityId, string name)
+        {
             chickenNames[entityId] = name;
+            SaveNames(); // Write immediately so a crash doesn't lose the rename.
+        }
 
         // Returns true and fills name if the entity has a custom/default name.
         // Falls back to rebuilding "Chicken X" from the persisted CVar on world reload.
@@ -67,6 +71,46 @@ namespace PetChickensMod
             if (_classId == -2)
                 _classId = EntityClass.FromString("entityPetChicken");
             return _classId >= 0 && e.entityType == _classId;
+        }
+
+        // ── Persistence ───────────────────────────────────────────────────────
+        static string SavePath => Path.Combine(GameIO.GetSaveGameDir(), "petChickenNames.txt");
+
+        public static void SaveNames()
+        {
+            try
+            {
+                var lines = new List<string>();
+                foreach (var kv in chickenNames)
+                    lines.Add(kv.Key + "=" + kv.Value);
+                File.WriteAllLines(SavePath, lines);
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogWarning("[ChickenMod] Could not save names: " + e.Message);
+            }
+        }
+
+        public static void LoadNames()
+        {
+            try
+            {
+                string path = SavePath;
+                if (!File.Exists(path)) return;
+                chickenNames.Clear();
+                foreach (string line in File.ReadAllLines(path))
+                {
+                    int eq = line.IndexOf('=');
+                    if (eq < 1) continue;
+                    if (int.TryParse(line.Substring(0, eq), out int id))
+                        chickenNames[id] = line.Substring(eq + 1);
+                }
+                UnityEngine.Debug.Log("[ChickenMod] Loaded " + chickenNames.Count + " chicken name(s).");
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogWarning("[ChickenMod] Could not load names: " + e.Message);
+            }
         }
 
         // ── Cleanup on death ──────────────────────────────────────────────────
