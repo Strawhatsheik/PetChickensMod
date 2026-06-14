@@ -1,0 +1,6 @@
+Key,File,Type,UsedInMainMenu,NoTranslate,english
+cntChickenTrough,blocks,Block,,,Chicken Feeder
+cntChickenTroughDesc,blocks,Block,,,Fill with cornmeal to feed nearby chickens once per day.
+cntChickenNest,blocks,Block,,,Chicken Nest
+cntChickenNestDesc,blocks,Block,,,A nest for a pet chicken. Eggs and feathers appear here when the chicken is fed.
+entityPetChicken,entities,Entity,,,Pet Chicken

@@ -1,9 +1,38 @@
-<block name="chickenTrough">
-    <property name="Class" value="SecureLoot" />
-    <property name="Group" value="Farming" />
-    <property name="CreativeMode" value="true" />
-    <drop event="Harvest" name="resourceFeather" count="1,2" prob="0.5" />
-    <property name="AcceptedItems">
-        <item name="resourceCornMeal" action="Store" />
-    </property>
-</block>
+<configs>
+    <append xpath="/blocks">
+
+        <!--
+            Chicken Trough — player-craftable, holds cornmeal fed to chickens.
+            Add  <property name="Model" value="YourPrefabPathHere"/>  once you have
+            the pig-trough art wired up in your Unity prefab.
+        -->
+        <block name="cntChickenTrough">
+            <property name="Class" value="SecureLoot"/>
+            <property name="Collide" value="melee,movement"/>
+            <property name="Material" value="Mwood_weak"/>
+            <property name="Group" value="Farming"/>
+            <property name="CreativeMode" value="true"/>
+            <property name="FilterTags" value="F_Farming"/>
+            <property name="StorageSize" value="1,9"/>
+            <drop event="Destroy" name="cntChickenTrough" count="1" prob="1"/>
+        </block>
+
+        <!--
+            Chicken Nest — player-craftable, placed near a trough.
+            Chickens claim one nest each and sleep on it at night.
+            Eggs and feathers accumulate here from fed chickens.
+            Up to 6 nests per trough are tracked by the mod.
+        -->
+        <block name="cntChickenNest">
+            <property name="Class" value="SecureLoot"/>
+            <property name="Collide" value="melee,movement"/>
+            <property name="Material" value="Mplant"/>
+            <property name="Group" value="Farming"/>
+            <property name="CreativeMode" value="true"/>
+            <property name="FilterTags" value="F_Farming"/>
+            <property name="StorageSize" value="1,6"/>
+            <drop event="Destroy" name="cntChickenNest" count="1" prob="1"/>
+        </block>
+
+    </append>
+</configs>

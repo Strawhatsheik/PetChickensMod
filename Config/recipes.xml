@@ -1,0 +1,15 @@
+<configs>
+    <append xpath="/recipes">
+
+        <!-- Craft in your inventory: 20 wood → Chicken Trough -->
+        <recipe name="cntChickenTrough" count="1" craft_area="player" craft_exp_gain="200">
+            <ingredient name="resourceWood" count="20"/>
+        </recipe>
+
+        <!-- Craft in your inventory: 40 plant fibers → Chicken Nest -->
+        <recipe name="cntChickenNest" count="1" craft_area="player" craft_exp_gain="100">
+            <ingredient name="resourceYuccaFibers" count="40"/>
+        </recipe>
+
+    </append>
+</configs>

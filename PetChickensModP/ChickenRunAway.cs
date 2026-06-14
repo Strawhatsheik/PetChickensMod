@@ -10,14 +10,14 @@ namespace PetChickensMod
         [HarmonyPostfix]
         static void CheckHungerAndFlee(EntityAnimal __instance)
         {
-            if (__instance.EntityName != "Pet Chicken") return;
+            if (!ChickenNestManager.IsPetChicken(__instance)) return;
 
-            float hunger = __instance.GetCustomVar("Hunger");
+            float hunger = __instance.GetCVar("Hunger");
 
             if (hunger <= 0 && Random.value < 0.1f)
             {
                 Vector3 fleePos = __instance.position + new Vector3(20, 0, 20);
-                __instance.PathTo(fleePos, true);
+                __instance.FindPath(fleePos, __instance.GetMoveSpeedPanic(), false, null);
             }
         }
     }

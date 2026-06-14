@@ -10,7 +10,7 @@ namespace PetChickensMod
         [HarmonyPostfix]
         static void CheckForGrass(EntityAnimal __instance)
         {
-            if (__instance.EntityName != "Pet Chicken") return;
+            if (!ChickenNestManager.IsPetChicken(__instance)) return;
 
             int grassCount = 0;
             Vector3 pos = __instance.position;
@@ -29,7 +29,7 @@ namespace PetChickensMod
 
             if (grassCount >= 10)
             {
-                __instance.SetCustomVar("Hunger", 0.5f);
+                __instance.SetCVar("Hunger", 0.5f);
             }
         }
     }
