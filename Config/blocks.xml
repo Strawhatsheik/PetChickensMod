@@ -12,8 +12,7 @@
             <property name="Collide" value="melee,movement"/>
             <property name="Material" value="Mwood_weak"/>
             <property name="Group" value="Farming"/>
-            <property name="CreativeMode" value="true"/>
-            <property name="FilterTags" value="F_Farming"/>
+            <property name="CreativeMode" value="Player"/>
             <drop event="Destroy" name="cntChickenTrough" count="1" prob="1"/>
         </block>
 
@@ -28,8 +27,7 @@
             <property name="Collide" value="melee,movement"/>
             <property name="Material" value="Mplant"/>
             <property name="Group" value="Farming"/>
-            <property name="CreativeMode" value="true"/>
-            <property name="FilterTags" value="F_Farming"/>
+            <property name="CreativeMode" value="Player"/>
             <drop event="Destroy" name="cntChickenNest" count="1" prob="1"/>
         </block>
 
