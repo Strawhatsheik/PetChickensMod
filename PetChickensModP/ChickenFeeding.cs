@@ -31,11 +31,13 @@ namespace PetChickensMod
 
             if (fed)
             {
+                UnityEngine.Debug.Log($"[ChickenMod] Chicken {__instance.entityId} fed from trough near nest {nestPos}");
                 __instance.SetCVar("Hunger", 1.0f);
                 ProduceInNest(world, nestPos);
             }
             else
             {
+                UnityEngine.Debug.Log($"[ChickenMod] Chicken {__instance.entityId} found no cornmeal — hunger dropping");
                 float hunger = Mathf.Max(0f, __instance.GetCVar("Hunger") - 0.5f);
                 __instance.SetCVar("Hunger", hunger);
             }
@@ -90,6 +92,7 @@ namespace PetChickensMod
             if (item.type == 0) return;
             storage.AddItem(new ItemStack(item.Clone(), 1));
             composite.setModified();
+            UnityEngine.Debug.Log($"[ChickenMod] Produced {item.ItemClass?.GetItemName()} in nest");
         }
     }
 }

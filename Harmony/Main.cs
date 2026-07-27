@@ -13,7 +13,7 @@ namespace PetChickensMod
             ModEvents.GameStartDone.RegisterHandler((ref ModEvents.SGameStartDoneData _) => ChickenNestManager.LoadNames());
             ModEvents.GameShutdown.RegisterHandler((ref ModEvents.SGameShutdownData _) => ChickenNestManager.SaveNames());
 
-            UnityEngine.Debug.Log("[ChickenMod] Loaded.");
+            UnityEngine.Debug.Log("[ChickenMod] v1.1 loaded — Harmony patches applied.");
         }
 
     }

@@ -50,6 +50,7 @@ namespace PetChickensMod
                 storage.RemoveItem(eggItem);
                 __instance.setModified();
                 hatchChances[key] = 0.01f;
+                UnityEngine.Debug.Log($"[ChickenMod] Egg hatched at {pos}!");
             }
             else
             {

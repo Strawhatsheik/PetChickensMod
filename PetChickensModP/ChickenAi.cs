@@ -56,6 +56,7 @@ namespace PetChickensMod
                 chicken.SetCVar("NestY", by);
                 chicken.SetCVar("NestZ", bz);
                 chicken.SetCVar("NestSet", 1f);
+                UnityEngine.Debug.Log($"[ChickenMod] Chicken {chicken.entityId} claimed nest at {nestPos}");
                 return;
             }
         }
