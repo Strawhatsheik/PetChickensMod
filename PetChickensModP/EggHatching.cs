@@ -4,27 +4,25 @@ using System.Collections.Generic;
 
 namespace PetChickensMod
 {
-    [HarmonyPatch(typeof(TileEntityCollector), "UpdateTick")]
+    [HarmonyPatch(typeof(TileEntityComposite), "UpdateTick")]
     public class Patch_EggHatching
     {
         private const int MaxChickensPerTrough = 6;
 
-        // Tracks hatch-probability per nest, building up until an egg hatches.
         private static readonly Dictionary<string, float> hatchChances = new Dictionary<string, float>();
 
         [HarmonyPostfix]
-        static void TryHatchEgg(TileEntityCollector __instance, World world)
+        static void TryHatchEgg(TileEntityComposite __instance, World world)
         {
             Vector3i pos = __instance.ToWorldPos();
             if (world.GetBlock(pos.x, pos.y, pos.z).Block.GetBlockName() != "cntChickenNest") return;
 
-            if (!(__instance is TileEntityLootContainer loot)) return;
+            TEFeatureStorage storage = __instance.GetFeature<TEFeatureStorage>();
+            if (storage == null) return;
 
-            // Only hatch if there is actually an egg sitting in the nest.
             ItemValue eggItem = ItemClass.GetItem("foodEgg", false);
-            if (eggItem.type == 0 || !loot.HasItem(eggItem)) return;
+            if (eggItem.type == 0 || !storage.HasItem(eggItem)) return;
 
-            // Cap: find the nearest trough and count how many nests around it are already owned.
             if (!FindNearbyTrough(world, pos, 10, out Vector3i troughPos)) return;
             if (ChickenNestManager.CountOwnedNestsNear(troughPos, 7, world) >= MaxChickensPerTrough) return;
 
@@ -41,18 +39,20 @@ namespace PetChickensMod
                         new Vector3(pos.x + 0.5f, pos.y + 0.1f, pos.z + 0.5f));
                     world.SpawnEntityInWorld(chick);
 
-                    // Assign number and default name immediately after spawning.
                     int num = ChickenNestManager.NextChickenNumber();
-                    chick.SetCVar("ChickenNumber", (float)num);
-                    ChickenNestManager.SetName(chick.entityId, "Chicken " + num);
+                    if (chick is EntityAlive ea)
+                    {
+                        ea.SetCVar("ChickenNumber", (float)num);
+                        ChickenNestManager.SetName(chick.entityId, "Chicken " + num);
+                    }
                 }
 
-                RemoveOneItem(loot, eggItem);
-                hatchChances[key] = 0.01f; // Reset for the next egg
+                storage.RemoveItem(eggItem);
+                __instance.setModified();
+                hatchChances[key] = 0.01f;
             }
             else
             {
-                // Chance ramps up each tick an egg sits unhatched, capping at 50%.
                 hatchChances[key] = Mathf.Min(chance + 0.001f, 0.5f);
             }
         }
@@ -74,19 +74,6 @@ namespace PetChickensMod
             }
             troughPos = default;
             return false;
-        }
-
-        static void RemoveOneItem(TileEntityLootContainer loot, ItemValue item)
-        {
-            for (int i = 0; i < loot.items.Length; i++)
-            {
-                if (loot.items[i].itemValue.type != item.type) continue;
-                loot.items[i].count--;
-                if (loot.items[i].count <= 0)
-                    loot.items[i] = new ItemStack(new ItemValue(0), 0);
-                loot.SetModified();
-                return;
-            }
         }
     }
 }

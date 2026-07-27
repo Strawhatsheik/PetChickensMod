@@ -1,0 +1,21 @@
+<configs>
+    <append xpath="/lootcontainers">
+
+        <!-- Chicken Feeder: player-placed trough filled with cornmeal -->
+        <lootcontainer name="chickenTrough" count="0" size="3,3"
+            sound_open="UseActions/crate_wood_open"
+            sound_close="UseActions/crate_wood_close"
+            loot_quality_template="qualBaseTemplate">
+            <item name="cobweb" count="0"/>
+        </lootcontainer>
+
+        <!-- Chicken Nest: eggs and feathers deposited here by fed chickens -->
+        <lootcontainer name="chickenNest" count="0" size="3,2"
+            sound_open="UseActions/nest_open"
+            sound_close="UseActions/nest_shut"
+            loot_quality_template="qualBaseTemplate">
+            <item name="cobweb" count="0"/>
+        </lootcontainer>
+
+    </append>
+</configs>

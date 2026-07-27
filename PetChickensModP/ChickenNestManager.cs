@@ -15,7 +15,7 @@ namespace PetChickensMod
             {
                 if (ownerId == entityId) return true;
                 Entity existing = world.GetEntity(ownerId);
-                if (existing != null && existing.isAlive) return false;
+                if (existing != null && existing.IsAlive()) return false;
             }
             nestOwners[nestPos] = entityId;
             return true;
@@ -31,7 +31,7 @@ namespace PetChickensMod
                 if (Math.Abs(n.y - troughPos.y) > radius) continue;
                 if (Math.Abs(n.z - troughPos.z) > radius) continue;
                 Entity owner = world.GetEntity(kv.Value);
-                if (owner != null && owner.isAlive) count++;
+                if (owner != null && owner.IsAlive()) count++;
             }
             return count;
         }
@@ -70,7 +70,7 @@ namespace PetChickensMod
         {
             if (_classId == -2)
                 _classId = EntityClass.FromString("entityPetChicken");
-            return _classId >= 0 && e.entityType == _classId;
+            return _classId >= 0 && (int)e.entityType == _classId;
         }
 
         // ── Persistence ───────────────────────────────────────────────────────

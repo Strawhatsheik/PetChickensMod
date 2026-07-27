@@ -10,13 +10,11 @@ namespace PetChickensMod
             var harmony = new Harmony("com.yourname.7dtd.chickenmod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            ModEvents.GameStartDone.RegisterHandler(OnGameStartDone);
-            ModEvents.GameShutdown.RegisterHandler(OnGameShutdown);
+            ModEvents.GameStartDone.RegisterHandler((ref ModEvents.SGameStartDoneData _) => ChickenNestManager.LoadNames());
+            ModEvents.GameShutdown.RegisterHandler((ref ModEvents.SGameShutdownData _) => ChickenNestManager.SaveNames());
 
             UnityEngine.Debug.Log("[ChickenMod] Loaded.");
         }
 
-        static void OnGameStartDone() => ChickenNestManager.LoadNames();
-        static void OnGameShutdown()  => ChickenNestManager.SaveNames();
     }
 }

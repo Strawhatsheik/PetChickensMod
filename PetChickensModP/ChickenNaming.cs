@@ -28,14 +28,14 @@ namespace PetChickensMod
     // Registered automatically when the mod DLL is loaded.
     public class ConsoleCmdChickenName : ConsoleCmdAbstract
     {
-        public override string GetDescription() => "Name the nearest pet chicken.";
+        public override string getDescription() => "Name the nearest pet chicken.";
 
-        public override string GetHelp() =>
+        public override string getHelp() =>
             "Usage: name <chicken name>\n" +
             "Renames the pet chicken closest to you (within 6 blocks).\n" +
             "Alias: chickname";
 
-        public override string[] GetCommands() => new[] { "name", "chickname" };
+        public override string[] getCommands() => new[] { "name", "chickname" };
 
         public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
         {

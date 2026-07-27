@@ -1,36 +1,35 @@
 <configs>
     <append xpath="/blocks">
 
-        <!--
-            Chicken Trough — player-craftable, holds cornmeal fed to chickens.
-            Add  <property name="Model" value="YourPrefabPathHere"/>  once you have
-            the pig-trough art wired up in your Unity prefab.
-        -->
         <block name="cntChickenTrough">
-            <property name="Class" value="SecureLoot"/>
+            <property name="Class" value="CompositeTileEntity"/>
+            <property class="CompositeFeatures">
+                <property class="TEFeatureStorage">
+                    <property name="LootList" value="chickenTrough"/>
+                </property>
+                <property class="TEFeatureLockable"/>
+            </property>
             <property name="Collide" value="melee,movement"/>
             <property name="Material" value="Mwood_weak"/>
             <property name="Group" value="Farming"/>
             <property name="CreativeMode" value="true"/>
             <property name="FilterTags" value="F_Farming"/>
-            <property name="StorageSize" value="1,9"/>
             <drop event="Destroy" name="cntChickenTrough" count="1" prob="1"/>
         </block>
 
-        <!--
-            Chicken Nest — player-craftable, placed near a trough.
-            Chickens claim one nest each and sleep on it at night.
-            Eggs and feathers accumulate here from fed chickens.
-            Up to 6 nests per trough are tracked by the mod.
-        -->
         <block name="cntChickenNest">
-            <property name="Class" value="SecureLoot"/>
+            <property name="Class" value="CompositeTileEntity"/>
+            <property class="CompositeFeatures">
+                <property class="TEFeatureStorage">
+                    <property name="LootList" value="chickenNest"/>
+                </property>
+                <property class="TEFeatureLockable"/>
+            </property>
             <property name="Collide" value="melee,movement"/>
             <property name="Material" value="Mplant"/>
             <property name="Group" value="Farming"/>
             <property name="CreativeMode" value="true"/>
             <property name="FilterTags" value="F_Farming"/>
-            <property name="StorageSize" value="1,6"/>
             <drop event="Destroy" name="cntChickenNest" count="1" prob="1"/>
         </block>
 
