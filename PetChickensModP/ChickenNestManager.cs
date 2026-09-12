@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace PetChickensMod
 {
@@ -117,6 +118,8 @@ namespace PetChickensMod
             { name = null; return false; }
             return TryGetCoopSlotName(coop, GetSlot(entityId), out name);
         }
+
+        public static IEnumerable<int> GetAllChickenIds() => chickenToCoop.Keys;
 
         // ── Entity identity ───────────────────────────────────────────────────
         // An entity is a pet chicken if we spawned it this session (tracked in chickenToCoop).
