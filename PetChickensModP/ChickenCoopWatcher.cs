@@ -100,6 +100,10 @@ namespace PetChickensMod
 
             world.SpawnEntityInWorld(chicken);
 
+            // Anchor the wander task to the coop so the chicken doesn't roam away
+            if (chicken is EntityAlive alive)
+                alive.homePosition = new ChunkCoordinates(coopPos.x, coopPos.y, coopPos.z);
+
             ChickenNestManager.TryClaimCoop(coopPos, chicken.entityId, world);
             int slot = ChickenNestManager.GetSlot(chicken.entityId);
 

@@ -10,8 +10,9 @@ namespace PetChickensMod
         private const KeyCode RenameKey = KeyCode.N;
 
         private bool   _active;
-        private string _input        = "";
-        private int    _targetId     = -1;
+        private bool   _focusNext;
+        private string _input    = "";
+        private int    _targetId = -1;
         private Rect   _windowRect;
 
         void Awake()
@@ -24,10 +25,15 @@ namespace PetChickensMod
         {
             CoopWatcher.Tick();
 
-            if (!Input.GetKeyDown(RenameKey)) return;
+            if (_active)
+            {
+                // Escape closes without saving
+                if (Input.GetKeyDown(KeyCode.Escape))
+                    Close();
+                return; // don't let N key fire while typing in the dialog
+            }
 
-            // Close dialog if already open
-            if (_active) { Close(); return; }
+            if (!Input.GetKeyDown(RenameKey)) return;
 
             World world = GameManager.Instance?.World;
             if (world == null) return;
@@ -40,8 +46,8 @@ namespace PetChickensMod
             world.GetEntitiesInBounds(typeof(EntityAnimal),
                 new Bounds(player.position, Vector3.one * 12f), nearby);
 
-            Entity closest  = null;
-            float bestDist  = 6f;
+            Entity closest = null;
+            float bestDist = 6f;
             foreach (Entity e in nearby)
             {
                 if (!ChickenNestManager.IsPetChicken(e)) continue;
@@ -57,10 +63,11 @@ namespace PetChickensMod
 
         void Open(int entityId, string currentName)
         {
-            _active      = true;
-            _targetId    = entityId;
-            _input       = currentName;
-            _windowRect  = new Rect(Screen.width / 2f - 155f, Screen.height / 2f - 60f, 310f, 120f);
+            _active     = true;
+            _focusNext  = true;
+            _targetId   = entityId;
+            _input      = currentName;
+            _windowRect = new Rect(Screen.width / 2f - 155f, Screen.height / 2f - 60f, 310f, 120f);
         }
 
         void Close()
@@ -81,16 +88,23 @@ namespace PetChickensMod
             GUILayout.Space(6f);
             GUI.SetNextControlName("ChickenRenameField");
             _input = GUILayout.TextField(_input, 40, GUILayout.Width(290f));
-            GUI.FocusControl("ChickenRenameField");
+
+            // Focus the field once on open (calling every frame fights event processing)
+            if (_focusNext && Event.current.type == EventType.Repaint)
+            {
+                GUI.FocusControl("ChickenRenameField");
+                _focusNext = false;
+            }
+
             GUILayout.Space(8f);
 
             bool pressedOk    = GUILayout.Button("OK");
-            bool pressedEnter = Event.current.isKey
-                             && Event.current.type == EventType.KeyDown
+            bool pressedEnter = Event.current.type == EventType.KeyDown
                              && Event.current.keyCode == KeyCode.Return;
 
             if (pressedOk || pressedEnter)
             {
+                if (pressedEnter) Event.current.Use();
                 string name = _input.Trim();
                 if (name.Length > 0 && _targetId >= 0)
                     ChickenNestManager.SetName(_targetId, name);
