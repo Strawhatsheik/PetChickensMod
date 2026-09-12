@@ -1,26 +1,10 @@
 using UnityEngine;
-using HarmonyLib;
 using System.Collections.Generic;
 
 namespace PetChickensMod
 {
-    // Overrides the name shown in the targeting HUD for pet chickens.
-    [HarmonyPatch(typeof(EntityAlive), "get_EntityName")]
-    public class Patch_ChickenNameDisplay
-    {
-        [HarmonyPostfix]
-        static void InjectCustomName(EntityAlive __instance, ref string __result)
-        {
-            if (!ChickenNestManager.IsPetChicken(__instance)) return;
-
-            if (ChickenNestManager.TryGetName(__instance.entityId, out string name))
-                __result = name;
-        }
-    }
-
     // Console command: open F1 console and type  name Clucky
     // Works on the nearest pet chicken within 6 blocks of the player.
-    // Registered automatically when the mod DLL is loaded.
     public class ConsoleCmdChickenName : ConsoleCmdAbstract
     {
         public override string getDescription() => "Name the nearest pet chicken.";
@@ -55,13 +39,12 @@ namespace PetChickensMod
                 return;
             }
 
-            // Search for the nearest pet chicken within 6 blocks.
             var nearby = new List<Entity>();
             world.GetEntitiesInBounds(typeof(EntityAnimal),
                 new Bounds(player.position, Vector3.one * 12f), nearby);
 
             Entity closest = null;
-            float closestDist = 6f; // max range
+            float closestDist = 6f;
             foreach (Entity e in nearby)
             {
                 if (!ChickenNestManager.IsPetChicken(e)) continue;

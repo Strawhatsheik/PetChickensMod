@@ -32,10 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\0_TFP_Harmony\0Harmony.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -71,6 +67,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y /R "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\" &amp;&amp; xcopy /Y /R "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\0_TFP_Harmony\*.dll" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\"</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y /R "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\"</PostBuildEvent>
   </PropertyGroup>
 </Project>

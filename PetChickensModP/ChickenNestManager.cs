@@ -119,14 +119,9 @@ namespace PetChickensMod
         }
 
         // ── Entity identity ───────────────────────────────────────────────────
-        private static int _classId = -2;
-
-        public static bool IsPetChicken(Entity e)
-        {
-            if (_classId == -2)
-                _classId = EntityClass.FromString("entityPetChicken");
-            return _classId >= 0 && (int)e.entityType == _classId;
-        }
+        // An entity is a pet chicken if we spawned it this session (tracked in chickenToCoop).
+        public static bool IsPetChicken(Entity e) =>
+            e != null && chickenToCoop.ContainsKey(e.entityId);
 
         // ── Cleanup on death ──────────────────────────────────────────────────
         public static void ReleaseChicken(int entityId)

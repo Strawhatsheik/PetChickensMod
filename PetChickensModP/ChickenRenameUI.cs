@@ -22,6 +22,8 @@ namespace PetChickensMod
 
         void Update()
         {
+            CoopWatcher.Tick();
+
             if (!Input.GetKeyDown(RenameKey)) return;
 
             // Close dialog if already open

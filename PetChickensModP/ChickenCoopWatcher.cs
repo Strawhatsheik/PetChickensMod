@@ -1,25 +1,20 @@
 using System.Collections.Generic;
-using HarmonyLib;
 using UnityEngine;
 
 namespace PetChickensMod
 {
-    [HarmonyPatch(typeof(GameManager), "Update")]
-    public class Patch_CoopWatcher
+    public static class CoopWatcher
     {
         private static int _frame = 0;
-
-        // coopPos -> count of domesticatedChicken items last seen in that coop
         private static readonly Dictionary<Vector3i, int> _prevSlotCounts = new Dictionary<Vector3i, int>();
 
         public static void Reset() => _prevSlotCounts.Clear();
 
-        [HarmonyPostfix]
-        static void OnUpdate(GameManager __instance)
+        public static void Tick()
         {
-            if (++_frame % 300 != 0) return; // ~5 s at 60 fps
+            if (++_frame % 300 != 0) return;
 
-            World world = __instance.World;
+            World world = GameManager.Instance?.World;
             if (world == null) return;
 
             var players = world.Players?.list;
@@ -55,15 +50,10 @@ namespace PetChickensMod
             _prevSlotCounts.TryGetValue(coopPos, out int prevCount);
 
             if (newCount > prevCount)
-            {
-                int toSpawn = newCount - prevCount;
-                for (int i = 0; i < toSpawn; i++)
+                for (int i = 0; i < newCount - prevCount; i++)
                     SpawnPetChicken(coopPos, world);
-            }
             else if (newCount < prevCount)
-            {
                 ChickenNestManager.ReleaseChickensFromCoop(coopPos, prevCount - newCount, world);
-            }
 
             _prevSlotCounts[coopPos] = newCount;
         }
@@ -78,10 +68,8 @@ namespace PetChickensMod
 
             int count = 0;
             foreach (var slot in slots)
-            {
                 if (slot != null && !slot.IsEmpty() && slot.itemValue.type == chickenClass.Id)
                     count++;
-            }
             return count;
         }
 
@@ -112,11 +100,9 @@ namespace PetChickensMod
 
             world.SpawnEntityInWorld(chicken);
 
-            // Pre-register to coop so the slot index is known before the AI tick runs
             ChickenNestManager.TryClaimCoop(coopPos, chicken.entityId, world);
             int slot = ChickenNestManager.GetSlot(chicken.entityId);
 
-            // Restore saved name or assign a new one
             if (!ChickenNestManager.TryGetCoopSlotName(coopPos, slot, out string name))
             {
                 name = "Chicken #" + ChickenNestManager.NextChickenNumber();
