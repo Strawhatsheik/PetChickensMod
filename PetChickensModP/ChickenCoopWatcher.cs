@@ -41,7 +41,7 @@ namespace PetChickensMod
                     if (!checkedCoops.Add(bPos)) continue;
                     if (world.GetBlock(bPos.x, bPos.y, bPos.z).Block.GetBlockName() != "cntChickenCoop") continue;
 
-                    var te = world.GetTileEntity(bPos) as TileEntityComposite;
+                    var te = world.GetTileEntity(bPos) as TileEntityCollector;
                     if (te == null) continue;
 
                     CheckCoop(bPos, te, world);
@@ -49,7 +49,7 @@ namespace PetChickensMod
             }
         }
 
-        static void CheckCoop(Vector3i coopPos, TileEntityComposite te, World world)
+        static void CheckCoop(Vector3i coopPos, TileEntityCollector te, World world)
         {
             int newCount = CountDomesticatedChickens(te);
             _prevSlotCounts.TryGetValue(coopPos, out int prevCount);
@@ -68,15 +68,12 @@ namespace PetChickensMod
             _prevSlotCounts[coopPos] = newCount;
         }
 
-        static int CountDomesticatedChickens(TileEntityComposite te)
+        static int CountDomesticatedChickens(TileEntityCollector te)
         {
-            var storage = te.GetFeature<TEFeatureStorage>();
-            if (storage == null) return 0;
-
             ItemClass chickenClass = ItemClass.GetItemClass("domesticatedChicken", false);
             if (chickenClass == null) return 0;
 
-            var slots = storage.items;
+            var slots = te.CatalystSlots;
             if (slots == null) return 0;
 
             int count = 0;
