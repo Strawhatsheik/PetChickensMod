@@ -71,6 +71,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y /R "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\" &amp;&amp; xcopy /Y /R "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\0_TFP_Harmony\0Harmony.dll" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\"</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y /R "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\" &amp;&amp; xcopy /Y /R "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\0_TFP_Harmony\*.dll" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
