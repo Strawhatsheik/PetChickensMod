@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System.Reflection;
+using UnityEngine;
 
 namespace PetChickensMod
 {
@@ -9,6 +10,10 @@ namespace PetChickensMod
         {
             var harmony = new Harmony("com.yourname.7dtd.chickenmod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+            // Persistent UI host — survives scene changes
+            var uiHost = new GameObject("ChickenModUI");
+            uiHost.AddComponent<ChickenRenameUI>();
 
             ModEvents.GameStartDone.RegisterHandler((ref ModEvents.SGameStartDoneData _) =>
             {
