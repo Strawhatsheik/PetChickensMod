@@ -67,6 +67,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y /R "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\Assemblies\"</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y /R "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\ChickenMod\"</PostBuildEvent>
   </PropertyGroup>
 </Project>
