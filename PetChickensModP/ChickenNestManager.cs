@@ -109,6 +109,10 @@ namespace PetChickensMod
         {
             if (!chickenToCoop.TryGetValue(entityId, out Vector3i coop)) return;
             SetCoopSlotName(coop, GetSlot(entityId), name);
+
+            // Update HUD display name on the live entity
+            Entity e = GameManager.Instance?.World?.GetEntity(entityId);
+            if (e != null) e.SetEntityName(name);
         }
 
         // Convenience: get name by entity

@@ -8,9 +8,11 @@ namespace PetChickensMod
         private const ulong NightStart = 20000UL; // ~8 PM
         private const ulong DayStart   =  4000UL; // ~4 AM
 
-        private static int  _frame    = 0;
+        private static int  _frame     = 0;
         private static int  _nightTick = 0;
-        private static bool _wasNight = false;
+        private static int  _tether    = 0;
+        private static bool _wasNight  = false;
+        private const  float TetherDist = 15f;
 
         // coopPos → chicken count last seen (detects player add/remove)
         private static readonly Dictionary<Vector3i, int> _prevSlotCounts = new Dictionary<Vector3i, int>();
@@ -33,6 +35,10 @@ namespace PetChickensMod
             // Every frame: nudge night-returning chickens toward the coop
             if (_returning.Count > 0)
                 TickNightReturn(world);
+
+            // Every ~30 frames: pull any pet chicken that drifted/fled back toward its coop
+            if (++_tether % 30 == 0 && !_wasNight)
+                TetherChickens(world);
 
             if (++_frame % 300 != 0) return;
 
@@ -121,6 +127,22 @@ namespace PetChickensMod
             {
                 Vector3 target = new Vector3(coopPos.x + 0.5f, coopPos.y, coopPos.z + 0.5f);
                 alive.FindPath(target, alive.GetMoveSpeed(), false, null);
+            }
+        }
+
+        // ── Daytime tether ────────────────────────────────────────────────────
+
+        static void TetherChickens(World world)
+        {
+            foreach (int id in new List<int>(ChickenNestManager.GetAllChickenIds()))
+            {
+                if (!ChickenNestManager.HasCoopClaim(id, out Vector3i coopPos)) continue;
+                Entity e = world.GetEntity(id);
+                if (e == null || !e.IsAlive()) continue;
+
+                Vector3 home = new Vector3(coopPos.x + 0.5f, coopPos.y, coopPos.z + 0.5f);
+                if (Vector3.Distance(e.position, home) > TetherDist && e is EntityAlive alive)
+                    alive.FindPath(home, alive.GetMoveSpeed(), false, null);
             }
         }
 
@@ -216,6 +238,9 @@ namespace PetChickensMod
                 name = "Chicken #" + ChickenNestManager.NextChickenNumber();
                 ChickenNestManager.SetCoopSlotName(coopPos, slot, name);
             }
+
+            // Show the chicken's name in the targeting HUD
+            chicken.SetEntityName(name);
 
             UnityEngine.Debug.Log($"[ChickenMod] Spawned {name} (entity {chicken.entityId}, slot {slot}) at coop {coopPos}");
         }
