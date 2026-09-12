@@ -7,50 +7,76 @@ namespace PetChickensMod
     public static class ChickenNestManager
     {
         // ── Coop ownership ────────────────────────────────────────────────────
-        // Maps coop block position → entityId of chicken that claimed it.
-        // One slot per chicken; vanilla coop supports up to 3 chickens.
-        private static readonly Dictionary<Vector3i, int> coopOwners = new Dictionary<Vector3i, int>();
+        // chickenId → coop block position (inverted so one dict entry per chicken)
+        private static readonly Dictionary<int, Vector3i> chickenToCoop = new Dictionary<int, Vector3i>();
         private const int MaxChickensPerCoop = 3;
 
         public static bool TryClaimCoop(Vector3i coopPos, int entityId, World world)
         {
-            // Already claimed by this chicken
-            if (coopOwners.TryGetValue(coopPos, out int ownerId) && ownerId == entityId)
-                return true;
+            // Already claimed this exact coop
+            if (chickenToCoop.TryGetValue(entityId, out Vector3i existing))
+                return existing == coopPos;
 
-            // Slot taken by a living chicken — check if still alive
-            if (coopOwners.ContainsKey(coopPos))
-            {
-                Entity existing = world.GetEntity(coopOwners[coopPos]);
-                if (existing != null && existing.IsAlive()) return false;
-            }
-
-            // Count how many slots this coop already has claimed
+            // Count live chickens currently registered to this coop
             int claimed = 0;
-            foreach (var kv in coopOwners)
-                if (kv.Key == coopPos)
-                    claimed++;
+            foreach (var kv in chickenToCoop)
+            {
+                if (kv.Value != coopPos) continue;
+                Entity e = world.GetEntity(kv.Key);
+                if (e != null && e.IsAlive()) claimed++;
+            }
             if (claimed >= MaxChickensPerCoop) return false;
 
-            coopOwners[coopPos] = entityId;
+            chickenToCoop[entityId] = coopPos;
             return true;
         }
 
         public static bool HasCoopClaim(int entityId, out Vector3i coopPos)
         {
-            foreach (var kv in coopOwners)
+            return chickenToCoop.TryGetValue(entityId, out coopPos);
+        }
+
+        public static int GetCoopOccupancy(Vector3i coopPos, World world)
+        {
+            int count = 0;
+            foreach (var kv in chickenToCoop)
             {
-                if (kv.Value == entityId) { coopPos = kv.Key; return true; }
+                if (kv.Value != coopPos) continue;
+                Entity e = world.GetEntity(kv.Key);
+                if (e != null && e.IsAlive()) count++;
             }
-            coopPos = default;
-            return false;
+            return count;
+        }
+
+        // Called by CoopWatcher when domesticatedChicken items are removed from a coop
+        public static void ReleaseChickensFromCoop(Vector3i coopPos, int count, World world)
+        {
+            int released = 0;
+            var toRemove = new List<int>();
+
+            foreach (var kv in chickenToCoop)
+            {
+                if (kv.Value != coopPos) continue;
+                toRemove.Add(kv.Key);
+                if (++released >= count) break;
+            }
+
+            foreach (int id in toRemove)
+            {
+                chickenToCoop.Remove(id);
+                chickenNames.Remove(id);
+                Entity e = world.GetEntity(id);
+                if (e != null)
+                    world.RemoveEntity(id, EnumRemoveEntityReason.Despawned);
+            }
+            SaveNames();
         }
 
         // ── Names ─────────────────────────────────────────────────────────────
-        private static int nextChickenNumber = 0;
+        private static int _nextChickenNumber = 0;
         private static readonly Dictionary<int, string> chickenNames = new Dictionary<int, string>();
 
-        public static int NextChickenNumber() => ++nextChickenNumber;
+        public static int NextChickenNumber() => ++_nextChickenNumber;
 
         public static void SetName(int entityId, string name)
         {
@@ -84,11 +110,7 @@ namespace PetChickensMod
         // ── Cleanup on death ──────────────────────────────────────────────────
         public static void ReleaseChicken(int entityId)
         {
-            var toRemove = new List<Vector3i>();
-            foreach (var kv in coopOwners)
-                if (kv.Value == entityId) toRemove.Add(kv.Key);
-            foreach (var k in toRemove) coopOwners.Remove(k);
-
+            chickenToCoop.Remove(entityId);
             chickenNames.Remove(entityId);
         }
 

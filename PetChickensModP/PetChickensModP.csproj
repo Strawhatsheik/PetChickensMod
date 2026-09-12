@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChickenAi.cs" />
+    <Compile Include="ChickenCoopWatcher.cs" />
     <Compile Include="ChickenNestManager.cs" />
     <Compile Include="ChickenNaming.cs" />
     <Compile Include="..\Harmony\Main.cs" />
