@@ -61,11 +61,7 @@
     <Compile Include="ChickenAi.cs" />
     <Compile Include="ChickenNestManager.cs" />
     <Compile Include="ChickenNaming.cs" />
-    <Compile Include="ChickenFeeding.cs" />
     <Compile Include="..\Harmony\Main.cs" />
-    <Compile Include="ChickenRunAway.cs" />
-    <Compile Include="ChickenScavenging.cs" />
-    <Compile Include="EggHatching.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
