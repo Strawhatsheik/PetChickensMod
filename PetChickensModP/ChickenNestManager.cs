@@ -7,27 +7,31 @@ namespace PetChickensMod
     public static class ChickenNestManager
     {
         // ── Coop ownership ────────────────────────────────────────────────────
-        // chickenId → coop block position (inverted so one dict entry per chicken)
         private static readonly Dictionary<int, Vector3i> chickenToCoop = new Dictionary<int, Vector3i>();
+        private static readonly Dictionary<int, int>     chickenToSlot = new Dictionary<int, int>();
         private const int MaxChickensPerCoop = 3;
 
         public static bool TryClaimCoop(Vector3i coopPos, int entityId, World world)
         {
-            // Already claimed this exact coop
             if (chickenToCoop.TryGetValue(entityId, out Vector3i existing))
                 return existing == coopPos;
 
-            // Count live chickens currently registered to this coop
-            int claimed = 0;
+            // Find which slots are already occupied by live chickens at this coop
+            var occupiedSlots = new HashSet<int>();
             foreach (var kv in chickenToCoop)
             {
                 if (kv.Value != coopPos) continue;
                 Entity e = world.GetEntity(kv.Key);
-                if (e != null && e.IsAlive()) claimed++;
+                if (e != null && e.IsAlive())
+                    occupiedSlots.Add(chickenToSlot.TryGetValue(kv.Key, out int s) ? s : 0);
             }
-            if (claimed >= MaxChickensPerCoop) return false;
+
+            int slot = 0;
+            while (occupiedSlots.Contains(slot)) slot++;
+            if (slot >= MaxChickensPerCoop) return false;
 
             chickenToCoop[entityId] = coopPos;
+            chickenToSlot[entityId] = slot;
             return true;
         }
 
@@ -53,7 +57,6 @@ namespace PetChickensMod
         {
             int released = 0;
             var toRemove = new List<int>();
-
             foreach (var kv in chickenToCoop)
             {
                 if (kv.Value != coopPos) continue;
@@ -63,8 +66,13 @@ namespace PetChickensMod
 
             foreach (int id in toRemove)
             {
+                // Erase the name for this coop slot (item was intentionally removed)
+                if (chickenToSlot.TryGetValue(id, out int slot))
+                    coopNames.Remove(CoopSlotKey(coopPos, slot));
+
                 chickenToCoop.Remove(id);
-                chickenNames.Remove(id);
+                chickenToSlot.Remove(id);
+
                 Entity e = world.GetEntity(id);
                 if (e != null)
                     world.RemoveEntity(id, EnumRemoveEntityReason.Despawned);
@@ -72,29 +80,42 @@ namespace PetChickensMod
             SaveNames();
         }
 
-        // ── Names ─────────────────────────────────────────────────────────────
+        // ── Names (keyed by coop position + slot — survives session restarts) ─
         private static int _nextChickenNumber = 0;
-        private static readonly Dictionary<int, string> chickenNames = new Dictionary<int, string>();
+        private static readonly Dictionary<string, string> coopNames = new Dictionary<string, string>();
+
+        static string CoopSlotKey(Vector3i pos, int slot) =>
+            pos.x + "," + pos.y + "," + pos.z + "," + slot;
 
         public static int NextChickenNumber() => ++_nextChickenNumber;
 
-        public static void SetName(int entityId, string name)
+        // Get slot index for a chicken (0 if not tracked)
+        public static int GetSlot(int entityId) =>
+            chickenToSlot.TryGetValue(entityId, out int s) ? s : 0;
+
+        // Store/retrieve a name by coop position + slot
+        public static void SetCoopSlotName(Vector3i coopPos, int slot, string name)
         {
-            chickenNames[entityId] = name;
+            coopNames[CoopSlotKey(coopPos, slot)] = name;
             SaveNames();
         }
 
-        public static bool TryGetName(int entityId, string cvarFallback, out string name)
+        public static bool TryGetCoopSlotName(Vector3i coopPos, int slot, out string name) =>
+            coopNames.TryGetValue(CoopSlotKey(coopPos, slot), out name);
+
+        // Convenience: set name by entity (looks up coop+slot internally)
+        public static void SetName(int entityId, string name)
         {
-            if (chickenNames.TryGetValue(entityId, out name)) return true;
-            if (!string.IsNullOrEmpty(cvarFallback) && cvarFallback != "0")
-            {
-                name = "Chicken " + cvarFallback;
-                chickenNames[entityId] = name;
-                return true;
-            }
-            name = null;
-            return false;
+            if (!chickenToCoop.TryGetValue(entityId, out Vector3i coop)) return;
+            SetCoopSlotName(coop, GetSlot(entityId), name);
+        }
+
+        // Convenience: get name by entity
+        public static bool TryGetName(int entityId, out string name)
+        {
+            if (!chickenToCoop.TryGetValue(entityId, out Vector3i coop))
+            { name = null; return false; }
+            return TryGetCoopSlotName(coop, GetSlot(entityId), out name);
         }
 
         // ── Entity identity ───────────────────────────────────────────────────
@@ -110,8 +131,9 @@ namespace PetChickensMod
         // ── Cleanup on death ──────────────────────────────────────────────────
         public static void ReleaseChicken(int entityId)
         {
+            // Name stays in coopNames — the coop slot persists even when entity dies
             chickenToCoop.Remove(entityId);
-            chickenNames.Remove(entityId);
+            chickenToSlot.Remove(entityId);
         }
 
         // ── Persistence ───────────────────────────────────────────────────────
@@ -122,7 +144,8 @@ namespace PetChickensMod
             try
             {
                 var lines = new List<string>();
-                foreach (var kv in chickenNames)
+                lines.Add("_counter=" + _nextChickenNumber);
+                foreach (var kv in coopNames)
                     lines.Add(kv.Key + "=" + kv.Value);
                 File.WriteAllLines(SavePath, lines);
             }
@@ -138,15 +161,17 @@ namespace PetChickensMod
             {
                 string path = SavePath;
                 if (!File.Exists(path)) return;
-                chickenNames.Clear();
+                coopNames.Clear();
                 foreach (string line in File.ReadAllLines(path))
                 {
                     int eq = line.IndexOf('=');
                     if (eq < 1) continue;
-                    if (int.TryParse(line.Substring(0, eq), out int id))
-                        chickenNames[id] = line.Substring(eq + 1);
+                    string key = line.Substring(0, eq);
+                    string val = line.Substring(eq + 1);
+                    if (key == "_counter") { int.TryParse(val, out _nextChickenNumber); continue; }
+                    coopNames[key] = val;
                 }
-                UnityEngine.Debug.Log("[ChickenMod] Loaded " + chickenNames.Count + " chicken name(s).");
+                UnityEngine.Debug.Log("[ChickenMod] Loaded " + coopNames.Count + " chicken name(s).");
             }
             catch (Exception e)
             {

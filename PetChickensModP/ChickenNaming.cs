@@ -13,12 +13,7 @@ namespace PetChickensMod
         {
             if (!ChickenNestManager.IsPetChicken(__instance)) return;
 
-            // Build the fallback string from the persisted CVar so world reloads
-            // don't lose the number (e.g. CVar 3 → "Chicken 3").
-            int num = (int)__instance.GetCVar("ChickenNumber");
-            string cvarFallback = num > 0 ? num.ToString() : null;
-
-            if (ChickenNestManager.TryGetName(__instance.entityId, cvarFallback, out string name))
+            if (ChickenNestManager.TryGetName(__instance.entityId, out string name))
                 __result = name;
         }
     }

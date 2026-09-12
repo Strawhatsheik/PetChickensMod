@@ -115,10 +115,18 @@ namespace PetChickensMod
 
             world.SpawnEntityInWorld(chicken);
 
-            int num = ChickenNestManager.NextChickenNumber();
-            ChickenNestManager.SetName(chicken.entityId, "Chicken #" + num);
+            // Pre-register to coop so the slot index is known before the AI tick runs
+            ChickenNestManager.TryClaimCoop(coopPos, chicken.entityId, world);
+            int slot = ChickenNestManager.GetSlot(chicken.entityId);
 
-            UnityEngine.Debug.Log($"[ChickenMod] Spawned Chicken #{num} (entity {chicken.entityId}) from coop at {coopPos}");
+            // Restore saved name or assign a new one
+            if (!ChickenNestManager.TryGetCoopSlotName(coopPos, slot, out string name))
+            {
+                name = "Chicken #" + ChickenNestManager.NextChickenNumber();
+                ChickenNestManager.SetCoopSlotName(coopPos, slot, name);
+            }
+
+            UnityEngine.Debug.Log($"[ChickenMod] Spawned {name} (entity {chicken.entityId}, slot {slot}) at coop {coopPos}");
         }
     }
 }
