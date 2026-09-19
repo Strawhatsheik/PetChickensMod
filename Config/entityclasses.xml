@@ -2,16 +2,14 @@
 <configs>
     <append xpath="/entity_classes">
         <entity_class name="entityPetChicken" extends="animalChicken">
-            <!-- Remove "timid" so flee-target safeFlags don't apply -->
+            <!-- Use our custom C# class that strips flee AI tasks at spawn time -->
+            <property name="Class" value="EntityPetChicken"/>
             <property name="EntityFlags" value="animal,edible"/>
-            <!-- Zero sight range — can't see threats, so flee tasks never trigger -->
             <property name="SightRange" value="0"/>
-            <!-- Override ALL four AI task slots so no flee task survives -->
             <property name="AITask-1" value="Look"/>
             <property name="AITask-2" value="Wander"/>
             <property name="AITask-3" value="Look"/>
             <property name="AITask-4" value="Wander"/>
-            <!-- Slow panic speed as final fallback -->
             <property name="MoveSpeedPanic" value="0.5"/>
         </entity_class>
     </append>
