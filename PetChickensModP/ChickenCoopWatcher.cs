@@ -12,7 +12,7 @@ namespace PetChickensMod
         private static int  _nightTick = 0;
         private static int  _tether    = 0;
         private static bool _wasNight  = false;
-        private const  float TetherDist = 15f;
+        private const  float TetherDist = 40f;
 
         // coopPos → chicken count last seen (detects player add/remove)
         private static readonly Dictionary<Vector3i, int> _prevSlotCounts = new Dictionary<Vector3i, int>();
@@ -150,7 +150,11 @@ namespace PetChickensMod
 
         static void ScanCoopsNearPlayers(List<EntityPlayer> players, World world)
         {
-            var checkedCoops = new HashSet<Vector3i>();
+            var checkedBlocks = new HashSet<Vector3i>();
+            // Track seen TileEntity objects by identity so multi-block coops
+            // (multiple block positions sharing one TileEntity) are processed once.
+            var seenTEs = new List<TileEntityCollector>();
+
             foreach (EntityPlayer player in players)
             {
                 int px = (int)player.position.x;
@@ -162,10 +166,18 @@ namespace PetChickensMod
                 for (int dz = -20; dz <= 20; dz++)
                 {
                     var bPos = new Vector3i(px + dx, py + dy, pz + dz);
-                    if (!checkedCoops.Add(bPos)) continue;
+                    if (!checkedBlocks.Add(bPos)) continue;
                     if (world.GetBlock(bPos.x, bPos.y, bPos.z).Block.GetBlockName() != "cntChickenCoop") continue;
                     var te = world.GetTileEntity(bPos) as TileEntityCollector;
                     if (te == null) continue;
+
+                    // Skip if we already processed this exact TileEntity object this scan
+                    bool alreadySeen = false;
+                    foreach (var s in seenTEs)
+                        if (object.ReferenceEquals(s, te)) { alreadySeen = true; break; }
+                    if (alreadySeen) continue;
+                    seenTEs.Add(te);
+
                     CheckCoop(bPos, te, world);
                 }
             }
@@ -173,16 +185,18 @@ namespace PetChickensMod
 
         static void CheckCoop(Vector3i coopPos, TileEntityCollector te, World world)
         {
-            int newCount = CountDomesticatedChickens(te);
-            _prevSlotCounts.TryGetValue(coopPos, out int prevCount);
+            int itemCount = CountDomesticatedChickens(te);
+            // Always compare against actual live entities — this self-corrects any
+            // desync (chicken didn't despawn, session reload, etc.) every scan cycle.
+            int liveCount = ChickenNestManager.GetCoopOccupancy(coopPos, world);
 
-            if (newCount > prevCount)
-                for (int i = 0; i < newCount - prevCount; i++)
+            if (itemCount > liveCount)
+                for (int i = 0; i < itemCount - liveCount; i++)
                     SpawnPetChicken(coopPos, world);
-            else if (newCount < prevCount)
-                ChickenNestManager.ReleaseChickensFromCoop(coopPos, prevCount - newCount, world);
+            else if (itemCount < liveCount)
+                ChickenNestManager.ReleaseChickensFromCoop(coopPos, liveCount - itemCount, world);
 
-            _prevSlotCounts[coopPos] = newCount;
+            _prevSlotCounts[coopPos] = itemCount;
         }
 
         static int CountDomesticatedChickens(TileEntityCollector te)
@@ -200,6 +214,38 @@ namespace PetChickensMod
             return count;
         }
 
+        // Searches outward from the coop for a clear ground tile to spawn on
+        static Vector3 FindSpawnNearCoop(Vector3i coopPos, World world)
+        {
+            // Start far enough out to clear multi-block coop models
+            int[] d = { 4, -4, 5, -5, 3, -3, 6, -6 };
+            for (int i = 0; i < d.Length; i++)
+            {
+                int[][] pairs = { new[] { d[i], 0 }, new[] { 0, d[i] } };
+                foreach (int[] off in pairs)
+                {
+                    int x = coopPos.x + off[0];
+                    int z = coopPos.z + off[1];
+                    // Scan downward from above the coop to find the first solid+air pair
+                    for (int y = coopPos.y + 5; y >= coopPos.y - 5; y--)
+                    {
+                        bool groundBelow = world.GetBlock(x, y - 1, z).type != 0;
+                        bool clearHere   = world.GetBlock(x, y,     z).type == 0;
+                        bool clearAbove  = world.GetBlock(x, y + 1, z).type == 0;
+                        if (groundBelow && clearHere && clearAbove)
+                        {
+                            var pos = new Vector3(x + 0.5f, y, z + 0.5f);
+                            UnityEngine.Debug.Log($"[ChickenMod] Spawn ground found at {pos} (coop={coopPos})");
+                            return pos;
+                        }
+                    }
+                }
+            }
+            var fallback = new Vector3(coopPos.x + 0.5f, coopPos.y + 1f, coopPos.z + 0.5f);
+            UnityEngine.Debug.LogWarning($"[ChickenMod] No ground found near coop — fallback {fallback}");
+            return fallback;
+        }
+
         static void SpawnPetChicken(Vector3i coopPos, World world)
         {
             int classId = EntityClass.FromString("entityPetChicken");
@@ -209,7 +255,7 @@ namespace PetChickensMod
                 return;
             }
 
-            Vector3 spawnPos = new Vector3(coopPos.x + 0.5f, coopPos.y + 1f, coopPos.z + 0.5f);
+            Vector3 spawnPos = FindSpawnNearCoop(coopPos, world);
             var ecd = new EntityCreationData
             {
                 id          = EntityFactory.nextEntityID,
@@ -227,15 +273,20 @@ namespace PetChickensMod
 
             world.SpawnEntityInWorld(chicken);
 
+            // Set homePosition to the spawn location so EAIWander has a valid centre
+            // for picking wander targets. Use spawn coords, not coop coords, so the
+            // radius is around a confirmed ground position.
             if (chicken is EntityAlive alive)
-                alive.homePosition = new ChunkCoordinates(coopPos.x, coopPos.y, coopPos.z);
+                alive.homePosition = new ChunkCoordinates(
+                    (int)spawnPos.x, (int)spawnPos.y, (int)spawnPos.z);
 
             ChickenNestManager.TryClaimCoop(coopPos, chicken.entityId, world);
             int slot = ChickenNestManager.GetSlot(chicken.entityId);
 
             if (!ChickenNestManager.TryGetCoopSlotName(coopPos, slot, out string name))
             {
-                name = "Chicken #" + ChickenNestManager.NextChickenNumber();
+                name = ChickenRenameUI.ConsumePendingName()
+                       ?? "Chicken #" + ChickenNestManager.NextChickenNumber();
                 ChickenNestManager.SetCoopSlotName(coopPos, slot, name);
             }
 

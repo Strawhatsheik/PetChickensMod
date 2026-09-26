@@ -2,15 +2,21 @@
 <configs>
     <append xpath="/entity_classes">
         <entity_class name="entityPetChicken" extends="animalChicken">
-            <!-- Use our custom C# class that strips flee AI tasks at spawn time -->
-            <property name="Class" value="EntityPetChicken"/>
+            <!-- Class removed — falls back to EntityAnimalRabbit (via animalChicken) for movement test -->
             <property name="EntityFlags" value="animal,edible"/>
             <property name="SightRange" value="0"/>
+            <property name="WanderRange" value="35"/>
+            <property name="MoveSpeed" value="0.5"/>
+            <property name="MoveSpeedPanic" value="0.5"/>
+            <!-- Override every inherited AI task slot so no flee task survives -->
             <property name="AITask-1" value="Look"/>
             <property name="AITask-2" value="Wander"/>
             <property name="AITask-3" value="Look"/>
             <property name="AITask-4" value="Wander"/>
-            <property name="MoveSpeedPanic" value="0.5"/>
+            <property name="AITask-5" value="Look"/>
+            <property name="AITask-6" value="Wander"/>
+            <property name="AITask-7" value="Look"/>
+            <property name="AITask-8" value="Wander"/>
         </entity_class>
     </append>
 </configs>
